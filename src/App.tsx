@@ -1,122 +1,119 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// App.tsx
+import { useState, useMemo } from 'react';
+import { initialTeams } from './data/teams';
+import type { Team, Grade } from './types';
+import './App.css'; // Assumindo CSS básico ou Tailwind configurado
 
-function App() {
-  const [count, setCount] = useState(0)
+const calculateTotalTime = (team: Team): number => {
+  if (team.baseTimeSeconds === 0) return 0; // Ignora times que ainda não correram
+
+  const penaltyTime = team.penalties * 5;
+  let gradeTime = 0;
+  
+  if (team.parkingGrade === 'B') gradeTime = 5;
+  else if (team.parkingGrade === 'C') gradeTime = 10;
+
+  return team.baseTimeSeconds + penaltyTime + gradeTime;
+};
+
+export default function RobotRaceScoreboard() {
+  const [teams, setTeams] = useState<Team[]>(initialTeams);
+
+  // Ordena as equipes pelo tempo total (excluindo os que têm tempo 0)
+  const rankedTeams = useMemo(() => {
+    return [...teams].sort((a, b) => {
+      const timeA = calculateTotalTime(a);
+      const timeB = calculateTotalTime(b);
+      if (timeA === 0) return 1;
+      if (timeB === 0) return -1;
+      return timeA - timeB;
+    });
+  }, [teams]);
+
+  const updateTeam = (id: string, field: keyof Team, value: any) => {
+    setTeams(prevTeams => 
+      prevTeams.map(team => 
+        team.id === id ? { ...team, [field]: value } : team
+      )
+    );
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="scoreboard-container">
+      <header className="header">
+        <h1>Placar - Corrida de Carrinhos (RACE)</h1>
+      </header>
 
-      <div className="ticks"></div>
+      <div className="table-wrapper">
+        <table className="score-table">
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>Equipe / Carrinho</th>
+              <th>Tempo Trajeto (s)</th>
+              <th>Penalidades (+5s)</th>
+              <th>Estacionamento (E)</th>
+              <th>Tempo Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rankedTeams.map((team, index) => {
+              const totalTime = calculateTotalTime(team);
+              return (
+                <tr key={team.id} className="team-row">
+                  <td className="rank">#{totalTime > 0 ? index + 1 : '-'}</td>
+                  
+                  <td className="team-info">
+                    <img src={team.logo} alt={`Logo ${team.name}`} className="team-logo" />
+                    <div>
+                      <strong>{team.name}</strong>
+                      <span className="car-name">{team.carName}</span>
+                    </div>
+                  </td>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+                  <td>
+                    <input 
+                      type="number" 
+                      min="0"
+                      className="input-field"
+                      placeholder="Segundos"
+                      value={team.baseTimeSeconds || ''}
+                      onChange={(e) => updateTeam(team.id, 'baseTimeSeconds', Number(e.target.value))}
+                    />
+                  </td>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+                  <td>
+                    <input 
+                      type="number" 
+                      min="0"
+                      className="input-field"
+                      value={team.penalties}
+                      onChange={(e) => updateTeam(team.id, 'penalties', Number(e.target.value))}
+                    />
+                  </td>
+
+                  <td>
+                    <select 
+                      className="select-field"
+                      value={team.parkingGrade || ''}
+                      onChange={(e) => updateTeam(team.id, 'parkingGrade', e.target.value as Grade)}
+                    >
+                      <option value="">-</option>
+                      <option value="A">A (+0s)</option>
+                      <option value="B">B (+5s)</option>
+                      <option value="C">C (+10s)</option>
+                    </select>
+                  </td>
+
+                  <td className="total-time">
+                    {totalTime > 0 ? `${totalTime}s` : 'Pendente'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
-
-export default App
