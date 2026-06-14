@@ -56,7 +56,7 @@ export default function RobotRaceScoreboard() {
           <div>
             <span className="eyebrow">UNINASSAU apresenta</span>
             <h1>Placar RACE</h1>
-            <p>Corrida de carrinhos com visual futurista, leitura rápida e competição ao vivo.</p>
+            <p>Corrida de carrinhos competição ao vivo.</p>
           </div>
         </div>
 
