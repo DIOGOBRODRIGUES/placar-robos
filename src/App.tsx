@@ -30,6 +30,13 @@ export default function RobotRaceScoreboard() {
     });
   }, [teams]);
 
+  const completedTeams = useMemo(
+    () => rankedTeams.filter(team => calculateTotalTime(team) > 0),
+    [rankedTeams]
+  );
+
+  const fastestTeam = completedTeams[0] ?? null;
+
   const updateTeam = (id: string, field: keyof Team, value: any) => {
     setTeams(prevTeams => 
       prevTeams.map(team => 
@@ -39,81 +46,117 @@ export default function RobotRaceScoreboard() {
   };
 
   return (
-    <div className="scoreboard-container">
-      <header className="header">
-        <h1>Placar - Corrida de Carrinhos (RACE)</h1>
+    <div className="scoreboard-page">
+      <div className="ambient ambient-one" />
+      <div className="ambient ambient-two" />
+
+      <header className="hero-card">
+        <div className="hero-brand">
+          <img src="/logos/UNINASSAU.png" alt="Logo UNINASSAU" className="hero-logo" />
+          <div>
+            <span className="eyebrow">UNINASSAU apresenta</span>
+            <h1>Placar RACE</h1>
+            <p>Corrida de carrinhos com visual futurista, leitura rápida e competição ao vivo.</p>
+          </div>
+        </div>
+
+        <div className="hero-stats">
+          <article className="stat-card">
+            <span className="stat-label">Equipes</span>
+            <strong>{teams.length}</strong>
+          </article>
+          <article className="stat-card">
+            <span className="stat-label">Concluídas</span>
+            <strong>{completedTeams.length}</strong>
+          </article>
+          <article className="stat-card">
+            <span className="stat-label">Líder</span>
+            <strong>{fastestTeam ? fastestTeam.name : 'Aguardando'}</strong>
+          </article>
+        </div>
       </header>
 
-      <div className="table-wrapper">
-        <table className="score-table">
-          <thead>
-            <tr>
-              <th>Posição</th>
-              <th>Equipe / Carrinho</th>
-              <th>Tempo Trajeto (s)</th>
-              <th>Penalidades (+5s)</th>
-              <th>Estacionamento (E)</th>
-              <th>Tempo Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rankedTeams.map((team, index) => {
-              const totalTime = calculateTotalTime(team);
-              return (
-                <tr key={team.id} className="team-row">
-                  <td className="rank">#{totalTime > 0 ? index + 1 : '-'}</td>
-                  
-                  <td className="team-info">
-                    <img src={team.logo} alt={`Logo ${team.name}`} className="team-logo" />
-                    <div>
-                      <strong>{team.name}</strong>
-                      <span className="car-name">{team.carName}</span>
-                    </div>
-                  </td>
+      <main className="table-shell">
+        <div className="table-shell-header">
+          <div>
+            <span className="section-label">Painel de corrida</span>
+            <h2>Ranking em tempo real</h2>
+          </div>
+          <div className="live-pill">Ao vivo</div>
+        </div>
 
-                  <td>
-                    <input 
-                      type="number" 
-                      min="0"
-                      className="input-field"
-                      placeholder="Segundos"
-                      value={team.baseTimeSeconds || ''}
-                      onChange={(e) => updateTeam(team.id, 'baseTimeSeconds', Number(e.target.value))}
-                    />
-                  </td>
+        <div className="table-wrapper">
+          <table className="score-table">
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Equipe / Carrinho</th>
+                <th>Tempo Trajeto (s)</th>
+                <th>Penalidades (+5s)</th>
+                <th>Estacionamento (E)</th>
+                <th>Tempo Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rankedTeams.map((team, index) => {
+                const totalTime = calculateTotalTime(team);
+                const isFinished = totalTime > 0;
+                return (
+                  <tr key={team.id} className={`team-row ${isFinished ? 'team-row-finished' : ''}`}>
+                    <td className="rank">#{isFinished ? index + 1 : '-'}</td>
+                    
+                    <td className="team-info">
+                      <img src={team.logo} alt={`Logo ${team.name}`} className="team-logo" />
+                      <div>
+                        <strong>{team.name}</strong>
+                        <span className="car-name">{team.carName}</span>
+                      </div>
+                    </td>
 
-                  <td>
-                    <input 
-                      type="number" 
-                      min="0"
-                      className="input-field"
-                      value={team.penalties}
-                      onChange={(e) => updateTeam(team.id, 'penalties', Number(e.target.value))}
-                    />
-                  </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        min="0"
+                        className="input-field"
+                        placeholder="Segundos"
+                        value={team.baseTimeSeconds || ''}
+                        onChange={(e) => updateTeam(team.id, 'baseTimeSeconds', Number(e.target.value))}
+                      />
+                    </td>
 
-                  <td>
-                    <select 
-                      className="select-field"
-                      value={team.parkingGrade || ''}
-                      onChange={(e) => updateTeam(team.id, 'parkingGrade', e.target.value as Grade)}
-                    >
-                      <option value="">-</option>
-                      <option value="A">A (+0s)</option>
-                      <option value="B">B (+5s)</option>
-                      <option value="C">C (+10s)</option>
-                    </select>
-                  </td>
+                    <td>
+                      <input 
+                        type="number" 
+                        min="0"
+                        className="input-field"
+                        value={team.penalties}
+                        onChange={(e) => updateTeam(team.id, 'penalties', Number(e.target.value))}
+                      />
+                    </td>
 
-                  <td className="total-time">
-                    {totalTime > 0 ? `${totalTime}s` : 'Pendente'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                    <td>
+                      <select 
+                        className="select-field"
+                        value={team.parkingGrade || ''}
+                        onChange={(e) => updateTeam(team.id, 'parkingGrade', e.target.value as Grade)}
+                      >
+                        <option value="">-</option>
+                        <option value="A">A (+0s)</option>
+                        <option value="B">B (+5s)</option>
+                        <option value="C">C (+10s)</option>
+                      </select>
+                    </td>
+
+                    <td className="total-time">
+                      {totalTime > 0 ? `${totalTime}s` : 'Pendente'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 }
