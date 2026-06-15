@@ -4,16 +4,36 @@ import { initialTeams } from './data/teams';
 import type { Team, Grade } from './types';
 import './App.css'; // Assumindo CSS básico ou Tailwind configurado
 
+const formatTime = (totalSeconds: number): string => {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
 const calculateTotalTime = (team: Team): number => {
-  if (team.baseTimeSeconds === 0) return 0; // Ignora times que ainda não correram
+  const raceTimeSeconds = team.round1TimeSeconds + team.round2TimeSeconds;
+
+  if (raceTimeSeconds === 0) return 0; // Ignora times que ainda não correram
 
   const penaltyTime = team.penalties * 5;
   let gradeTime = 0;
   
-  if (team.parkingGrade === 'B') gradeTime = 5;
-  else if (team.parkingGrade === 'C') gradeTime = 10;
+  if (team.arrivalGrade === 'B') gradeTime = 5;
+  else if (team.arrivalGrade === 'C') gradeTime = 15;
 
-  return team.baseTimeSeconds + penaltyTime + gradeTime;
+  return raceTimeSeconds + penaltyTime + gradeTime;
+};
+
+const createTimeUpdater = (
+  updateTeam: (id: string, field: keyof Team, value: any) => void,
+  teamId: string,
+  field: 'round1TimeSeconds' | 'round2TimeSeconds',
+  minutes: number,
+  seconds: number
+) => {
+  const safeMinutes = Number.isFinite(minutes) ? Math.max(0, minutes) : 0;
+  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+  updateTeam(teamId, field, safeMinutes * 60 + safeSeconds);
 };
 
 export default function RobotRaceScoreboard() {
@@ -55,8 +75,8 @@ export default function RobotRaceScoreboard() {
           <img src="/logos/UNINASSAU.png" alt="Logo UNINASSAU" className="hero-logo" />
           <div>
             <span className="eyebrow">UNINASSAU apresenta</span>
-            <h1>Placar RACE</h1>
-            <p>Corrida de carrinhos competição ao vivo.</p>
+            <h1>VELOZES E CIRCUITOSOS</h1>
+            <p>Corrida em duas rodadas, com ranking final pela soma dos tempos e das penalidades.</p>
           </div>
         </div>
 
@@ -91,9 +111,10 @@ export default function RobotRaceScoreboard() {
               <tr>
                 <th>Posição</th>
                 <th>Equipe / Carrinho</th>
-                <th>Tempo Trajeto (s)</th>
+                <th>Rodada 1</th>
+                <th>Rodada 2</th>
                 <th>Penalidades (+5s)</th>
-                <th>Estacionamento (E)</th>
+                <th>Nota de Chegada</th>
                 <th>Tempo Total</th>
               </tr>
             </thead>
@@ -114,14 +135,65 @@ export default function RobotRaceScoreboard() {
                     </td>
 
                     <td>
-                      <input 
-                        type="number" 
-                        min="0"
-                        className="input-field"
-                        placeholder="Segundos"
-                        value={team.baseTimeSeconds || ''}
-                        onChange={(e) => updateTeam(team.id, 'baseTimeSeconds', Number(e.target.value))}
-                      />
+                      <div className="time-group">
+                        <input
+                          type="number"
+                          min="0"
+                          className="input-field input-field-minutes"
+                          placeholder="Min"
+                          value={team.round1TimeSeconds > 0 ? Math.floor(team.round1TimeSeconds / 60) : ''}
+                          onChange={(e) => {
+                            const minutes = Number(e.target.value);
+                            const seconds = team.round1TimeSeconds % 60;
+                            createTimeUpdater(updateTeam, team.id, 'round1TimeSeconds', minutes, seconds);
+                          }}
+                        />
+                        <span className="time-separator">:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          className="input-field input-field-seconds"
+                          placeholder="Seg"
+                          value={team.round1TimeSeconds > 0 ? team.round1TimeSeconds % 60 : ''}
+                          onChange={(e) => {
+                            const minutes = Math.floor(team.round1TimeSeconds / 60);
+                            const seconds = Number(e.target.value);
+                            createTimeUpdater(updateTeam, team.id, 'round1TimeSeconds', minutes, seconds);
+                          }}
+                        />
+                      </div>
+                    </td>
+
+                    <td>
+                      <div className="time-group">
+                        <input
+                          type="number"
+                          min="0"
+                          className="input-field input-field-minutes"
+                          placeholder="Min"
+                          value={team.round2TimeSeconds > 0 ? Math.floor(team.round2TimeSeconds / 60) : ''}
+                          onChange={(e) => {
+                            const minutes = Number(e.target.value);
+                            const seconds = team.round2TimeSeconds % 60;
+                            createTimeUpdater(updateTeam, team.id, 'round2TimeSeconds', minutes, seconds);
+                          }}
+                        />
+                        <span className="time-separator">:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          className="input-field input-field-seconds"
+                          placeholder="Seg"
+                          value={team.round2TimeSeconds > 0 ? team.round2TimeSeconds % 60 : ''}
+                          onChange={(e) => {
+                            const minutes = Math.floor(team.round2TimeSeconds / 60);
+                            const seconds = Number(e.target.value);
+                            createTimeUpdater(updateTeam, team.id, 'round2TimeSeconds', minutes, seconds);
+                          }}
+                        />
+                      </div>
                     </td>
 
                     <td>
@@ -137,18 +209,18 @@ export default function RobotRaceScoreboard() {
                     <td>
                       <select 
                         className="select-field"
-                        value={team.parkingGrade || ''}
-                        onChange={(e) => updateTeam(team.id, 'parkingGrade', e.target.value as Grade)}
+                        value={team.arrivalGrade || ''}
+                        onChange={(e) => updateTeam(team.id, 'arrivalGrade', e.target.value as Grade)}
                       >
                         <option value="">-</option>
                         <option value="A">A (+0s)</option>
                         <option value="B">B (+5s)</option>
-                        <option value="C">C (+10s)</option>
+                        <option value="C">C (+15s)</option>
                       </select>
                     </td>
 
                     <td className="total-time">
-                      {totalTime > 0 ? `${totalTime}s` : 'Pendente'}
+                      {totalTime > 0 ? formatTime(totalTime) : 'Pendente'}
                     </td>
                   </tr>
                 );

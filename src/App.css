@@ -198,7 +198,7 @@ body::before {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 980px;
+  min-width: 1180px;
 }
 
 .score-table thead th {
@@ -276,6 +276,25 @@ body::before {
   color: rgba(235, 245, 255, 0.38);
 }
 
+.time-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-field-minutes {
+  width: 72px;
+}
+
+.input-field-seconds {
+  width: 72px;
+}
+
+.time-separator {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .input-field:focus,
 .select-field:focus {
   outline: none;
@@ -311,5 +330,9 @@ body::before {
   .table-shell-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .score-table {
+    min-width: 1040px;
   }
 }
