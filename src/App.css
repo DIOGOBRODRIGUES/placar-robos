@@ -290,6 +290,10 @@ body::before {
   width: 72px;
 }
 
+.input-field-milliseconds {
+  width: 86px;
+}
+
 .time-separator {
   color: var(--muted);
   font-weight: 700;
