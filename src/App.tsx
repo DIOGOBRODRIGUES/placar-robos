@@ -4,43 +4,43 @@ import { initialTeams } from './data/teams';
 import type { Team, Grade } from './types';
 import './App.css'; // Assumindo CSS básico ou Tailwind configurado
 
-const formatTime = (totalMilliseconds: number): string => {
-  const totalSeconds = Math.floor(totalMilliseconds / 1000);
+const formatTime = (totalHundredths: number): string => {
+  const totalSeconds = Math.floor(totalHundredths / 100);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  const milliseconds = totalMilliseconds % 1000;
-  return `${minutes}:${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+  const hundredths = totalHundredths % 100;
+  return `${minutes}:${String(seconds).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
 };
 
 const calculateTotalTime = (team: Team): number => {
-  const raceTimeMilliseconds =
-    (team.round1TimeSeconds * 1000) +
-    team.round1TimeMilliseconds +
-    (team.round2TimeSeconds * 1000) +
-    team.round2TimeMilliseconds;
+  const raceTimeHundredths =
+    (team.round1TimeSeconds * 100) +
+    team.round1TimeHundredths +
+    (team.round2TimeSeconds * 100) +
+    team.round2TimeHundredths;
 
-  if (raceTimeMilliseconds === 0) return 0; // Ignora times que ainda não correram
+  if (raceTimeHundredths === 0) return 0; // Ignora times que ainda não correram
 
-  const penaltyTime = team.penalties * 5000;
+  const penaltyTime = team.penalties * 500;
   let gradeTime = 0;
   
-  if (team.arrivalGrade === 'B') gradeTime = 5000;
-  else if (team.arrivalGrade === 'C') gradeTime = 15000;
+  if (team.arrivalGrade === 'B') gradeTime = 500;
+  else if (team.arrivalGrade === 'C') gradeTime = 1500;
 
-  return raceTimeMilliseconds + penaltyTime + gradeTime;
+  return raceTimeHundredths + penaltyTime + gradeTime;
 };
 
 const createTimeUpdater = (
   updateTeam: (id: string, field: keyof Team, value: any) => void,
   teamId: string,
-  field: 'round1TimeSeconds' | 'round1TimeMilliseconds' | 'round2TimeSeconds' | 'round2TimeMilliseconds',
+  field: 'round1TimeSeconds' | 'round1TimeHundredths' | 'round2TimeSeconds' | 'round2TimeHundredths',
   minutes: number,
-  secondsOrMilliseconds: number
+  secondsOrHundredths: number
 ) => {
   const safeMinutes = Number.isFinite(minutes) ? Math.max(0, minutes) : 0;
-  const safeUnit = Number.isFinite(secondsOrMilliseconds) ? Math.max(0, secondsOrMilliseconds) : 0;
+  const safeUnit = Number.isFinite(secondsOrHundredths) ? Math.max(0, secondsOrHundredths) : 0;
 
-  if (field === 'round1TimeMilliseconds' || field === 'round2TimeMilliseconds') {
+  if (field === 'round1TimeHundredths' || field === 'round2TimeHundredths') {
     updateTeam(teamId, field, safeUnit);
     return;
   }
@@ -177,13 +177,13 @@ export default function RobotRaceScoreboard() {
                         <input
                           type="number"
                           min="0"
-                          max="999"
-                          className="input-field input-field-milliseconds"
-                          placeholder="Ms"
-                          value={team.round1TimeMilliseconds > 0 ? team.round1TimeMilliseconds : ''}
+                          max="99"
+                          className="input-field input-field-hundredths"
+                          placeholder="Cs"
+                          value={team.round1TimeHundredths > 0 ? team.round1TimeHundredths : ''}
                           onChange={(e) => {
-                            const milliseconds = Number(e.target.value);
-                            createTimeUpdater(updateTeam, team.id, 'round1TimeMilliseconds', 0, milliseconds);
+                            const hundredths = Number(e.target.value);
+                            createTimeUpdater(updateTeam, team.id, 'round1TimeHundredths', 0, hundredths);
                           }}
                         />
                       </div>
@@ -220,13 +220,13 @@ export default function RobotRaceScoreboard() {
                         <input
                           type="number"
                           min="0"
-                          max="999"
-                          className="input-field input-field-milliseconds"
-                          placeholder="Ms"
-                          value={team.round2TimeMilliseconds > 0 ? team.round2TimeMilliseconds : ''}
+                          max="99"
+                          className="input-field input-field-hundredths"
+                          placeholder="Cs"
+                          value={team.round2TimeHundredths > 0 ? team.round2TimeHundredths : ''}
                           onChange={(e) => {
-                            const milliseconds = Number(e.target.value);
-                            createTimeUpdater(updateTeam, team.id, 'round2TimeMilliseconds', 0, milliseconds);
+                            const hundredths = Number(e.target.value);
+                            createTimeUpdater(updateTeam, team.id, 'round2TimeHundredths', 0, hundredths);
                           }}
                         />
                       </div>

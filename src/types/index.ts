@@ -6,9 +6,9 @@ export interface Team {
   carName: string;
   logo: string;
   round1TimeSeconds: number;
-  round1TimeMilliseconds: number;
+  round1TimeHundredths: number;
   round2TimeSeconds: number;
-  round2TimeMilliseconds: number;
+  round2TimeHundredths: number;
   penalties: number;
   arrivalGrade: Grade;
 }
